@@ -27,10 +27,10 @@ function HomePage() {
       {/* Main Content */}
       <div className="flex flex-1 p-8 gap-8">
         {/* Left Section */}
-        <div className="flex-1 space-y-8">
-          <IntroSection />
+        <div className="flex-1 flex-row space-y-8">
+         
           <AboutSection />
-          <HowItWorksSection />
+          
 
           {/* Display fetched data */}
           {data.length > 0 && (
