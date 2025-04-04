@@ -7,6 +7,12 @@ import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import AdminSignupPage from './pages/AdminSignupPage';
 import UserSignupPage from './pages/UserSignupPage';
+import EcoTransport from './pages/EcoTransport';
+import Gamification from './pages/Gamification';
+import ReportIssue from './pages/ReportIssue';
+import AdminDashboard from './pages/AdminDashboard';
+import HowItWorks from './pages/HowItWorks';
+import TransportEntry from './pages/TransportEntry';
 
 import UserDashboard from './pages/UserDashboard';
 import './App.css';
@@ -24,6 +30,14 @@ function App() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/admin-signup" element={<AdminSignupPage />} />
           <Route path="/user-signup" element={<UserSignupPage />} />
+          <Route path="/eco-transport" element={<EcoTransport />} />
+          <Route path="/gamification-score" element={<Gamification />} />
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/report-issue" element={<ReportIssue />} />
+          <Route path="/how-it-works" element={<HowItWorks />} />
+          <Route path="/transport-entry" element={<TransportEntry />} />
+          {/* Add more routes as needed */}
+          {/* Example: Admin Dashboard */}
          
           <Route path="/user-dashboard" element={<UserDashboard />} />
           {/* Fallback route for undefined paths */}

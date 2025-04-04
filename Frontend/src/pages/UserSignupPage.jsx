@@ -1,25 +1,19 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-// import api from '../services/api';
 
 function UserSignupPage() {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors }
   } = useForm();
   const navigate = useNavigate();
-  const password = watch('password');
 
   const onSubmit = async (data) => {
     try {
-      // Replace the following simulated API call with your actual API request.
+      // Simulated API request
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      // Example:
-      // const response = await api.post('/user/register', data);
-      
       alert('User account created successfully!');
       navigate('/login');
     } catch (error) {
@@ -44,21 +38,53 @@ function UserSignupPage() {
               <h3 className="text-blue-800 font-medium border-b border-blue-100 pb-1 mb-2">
                 Personal Information
               </h3>
+              
+              {/* First Name */}
               <div>
-                <label htmlFor="fullName" className="block text-gray-700 font-medium mb-1 text-sm">
-                  Full Name*
+                <label htmlFor="firstName" className="block text-gray-700 font-medium mb-1 text-sm">
+                  First Name*
                 </label>
                 <input
                   type="text"
-                  id="fullName"
-                  {...register('fullName', { required: 'Full name is required' })}
+                  id="firstName"
+                  {...register('firstName', { required: 'First name is required' })}
                   className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter your full name"
+                  placeholder="Enter your first name"
                 />
-                {errors.fullName && (
-                  <p className="text-red-500 text-xs mt-1">{errors.fullName.message}</p>
-                )}
+                {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName.message}</p>}
               </div>
+
+              {/* Last Name */}
+              <div>
+                <label htmlFor="lastName" className="block text-gray-700 font-medium mb-1 text-sm">
+                  Last Name*
+                </label>
+                <input
+                  type="text"
+                  id="lastName"
+                  {...register('lastName', { required: 'Last name is required' })}
+                  className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter your last name"
+                />
+                {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName.message}</p>}
+              </div>
+
+              {/* Username */}
+              <div>
+                <label htmlFor="username" className="block text-gray-700 font-medium mb-1 text-sm">
+                  Username*
+                </label>
+                <input
+                  type="text"
+                  id="username"
+                  {...register('username', { required: 'Username is required' })}
+                  className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Choose a username"
+                />
+                {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username.message}</p>}
+              </div>
+
+              {/* Email */}
               <div>
                 <label htmlFor="email" className="block text-gray-700 font-medium mb-1 text-sm">
                   Email* <span className="text-xs text-blue-600">(Unique)</span>
@@ -76,9 +102,7 @@ function UserSignupPage() {
                   className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter your email address"
                 />
-                {errors.email && (
-                  <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
-                )}
+                {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
               </div>
             </div>
             
@@ -87,6 +111,8 @@ function UserSignupPage() {
               <h3 className="text-blue-800 font-medium border-b border-blue-100 pb-1 mb-2">
                 Security
               </h3>
+
+              {/* Password */}
               <div>
                 <label htmlFor="password" className="block text-gray-700 font-medium mb-1 text-sm">
                   Password*
@@ -101,30 +127,11 @@ function UserSignupPage() {
                   className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Create a secure password"
                 />
-                {errors.password && (
-                  <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
-                )}
-              </div>
-              <div>
-                <label htmlFor="confirmPassword" className="block text-gray-700 font-medium mb-1 text-sm">
-                  Confirm Password*
-                </label>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  {...register('confirmPassword', {
-                    required: 'Confirm password is required',
-                    validate: (value) => value === password || 'Passwords do not match'
-                  })}
-                  className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Confirm your password"
-                />
-                {errors.confirmPassword && (
-                  <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>
-                )}
+                {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
               </div>
             </div>
             
+            {/* Buttons */}
             <div className="mt-6 flex items-center justify-end space-x-3">
               <button
                 type="button"

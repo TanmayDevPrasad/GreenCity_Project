@@ -1,57 +1,45 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 function SignUpSidebar({ setIsLoggedIn }) {
   const navigate = useNavigate();
 
-  // For demo purposes, navigate based on a dummy role.
-  // In a real app, determine the role from user state (e.g., context or Redux)
-  const handleLogin = (role) => {
-    if (role === 'admin') {
-      navigate('/admin-dashboard');
-    } else {
-      navigate('/user-dashboard');
-    }
-  };
-
   return (
-    <aside className="p-6 bg-gray-200 rounded-lg shadow-md">
-      <h2 className="text-lg font-semibold mb-4">Join Green City</h2>
+    <motion.aside
+      initial={{ x: -50, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="p-6 bg-white rounded-2xl shadow-xl w-full max-w-sm"
+    >
+      <h2 className="text-2xl font-bold text-green-700 mb-6 text-center">
+        Join <span className="text-green-900">Green City</span>
+      </h2>
+
       <button
         onClick={() => navigate('/admin-signup')}
-        className="w-full bg-green-600 text-white py-2 mb-2 rounded hover:bg-green-700"
+        className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 mb-3 rounded-xl transition duration-300"
       >
         Sign Up as Admin
       </button>
+
       <button
         onClick={() => navigate('/user-signup')}
-        className="w-full bg-green-600 text-white py-2 mb-2 rounded hover:bg-green-700"
+        className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-medium py-2.5 mb-3 rounded-xl transition duration-300"
       >
         Sign Up as User
       </button>
-      <button
-        onClick={() => navigate('/login')}
-        className="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600"
-      >
-        If Already Registered, Log In
-      </button>
 
-      {/* Demo login buttons */}
-      <div className="mt-4">
+      <div className="border-t pt-4 mt-4">
+        <p className="text-gray-500 text-sm text-center mb-2">Already have an account?</p>
         <button
-          onClick={() => handleLogin('user')}
-          className="w-full bg-blue-500 text-white py-2 mb-2 rounded hover:bg-blue-600"
+          onClick={() => navigate('/login')}
+          className="w-full bg-gray-700 hover:bg-gray-800 text-white font-medium py-2.5 rounded-xl transition duration-300"
         >
-          Go to User Dashboard
-        </button>
-        <button
-          onClick={() => handleLogin('admin')}
-          className="w-full bg-red-500 text-white py-2 rounded hover:bg-red-600"
-        >
-          Go to Admin Dashboard
+          Log In
         </button>
       </div>
-    </aside>
+    </motion.aside>
   );
 }
 
