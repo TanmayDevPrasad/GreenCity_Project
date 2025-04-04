@@ -15,7 +15,7 @@ function UserSignupPage() {
       // Simulated API request
       await new Promise((resolve) => setTimeout(resolve, 1000));
       alert('User account created successfully!');
-      navigate('/login');
+      navigate('/user-login');
     } catch (error) {
       console.error('Registration failed:', error);
       alert('Registration failed. Please try again.');

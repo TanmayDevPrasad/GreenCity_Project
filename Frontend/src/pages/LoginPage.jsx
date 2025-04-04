@@ -36,33 +36,21 @@ function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+  
     if (!formData.organizationId || !formData.password) {
       setError('Please enter both Organization ID and Password');
       return;
     }
-    
+  
     setLoading(true);
     setError('');
-    
+  
     try {
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simulated API response based on organizationId (this is just for demo)
-      // For example, if organizationId contains "admin", then role is admin
-      const simulatedUser = {
-        role: formData.organizationId.toLowerCase().includes('admin')
-                ? 'admin'
-                : 'user'
-      };
-
-      // Successfully logged in; navigate based on the returned role
-      if (simulatedUser.role === 'admin') {
-        navigate('/admin-dashboard');
-      } else {
-        navigate('/user-dashboard');
-      }
+  
+      // Always navigate to admin dashboard on success
+      navigate('/admin-dashboard');
     } catch (err) {
       setError('Invalid credentials. Please try again.');
       console.error('Login error:', err);
@@ -70,6 +58,7 @@ function LoginPage() {
       setLoading(false);
     }
   };
+  
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);

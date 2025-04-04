@@ -18,20 +18,20 @@ function AdminSignupPage() {
       if (data.logo && data.logo[0]) {
         console.log('Uploaded logo file:', data.logo[0]);
       }
-
+  
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Optional: Set login status (can be used for auth later)
-      localStorage.setItem("isAdminLoggedIn", "true");
-
+  
       alert('Admin account created successfully!');
-      navigate('/admin-dashboard'); // Redirect to Dashboard
+      
+      // Redirect to Admin Login Page after success
+      navigate('/admin-login');
     } catch (error) {
       console.error('Registration failed:', error);
       alert('Registration failed. Please try again.');
     }
   };
+  
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-r from-green-600 to-green-500">

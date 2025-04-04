@@ -13,6 +13,7 @@ import ReportIssue from './pages/ReportIssue';
 import AdminDashboard from './pages/AdminDashboard';
 import HowItWorks from './pages/HowItWorks';
 import TransportEntry from './pages/TransportEntry';
+import UserLoginPage from './pages/UserLoginPage';
 
 import UserDashboard from './pages/UserDashboard';
 import './App.css';
@@ -25,7 +26,7 @@ function App() {
         {/* Define routes for each page */}
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/admin-login" element={<LoginPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/admin-signup" element={<AdminSignupPage />} />
@@ -36,6 +37,7 @@ function App() {
           <Route path="/report-issue" element={<ReportIssue />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path="/transport-entry" element={<TransportEntry />} />
+          <Route path="/user-login" element={<UserLoginPage />} />
           {/* Add more routes as needed */}
           {/* Example: Admin Dashboard */}
          

@@ -32,11 +32,19 @@ function SignUpSidebar({ setIsLoggedIn }) {
 
       <div className="border-t pt-4 mt-4">
         <p className="text-gray-500 text-sm text-center mb-2">Already have an account?</p>
+        
         <button
-          onClick={() => navigate('/login')}
-          className="w-full bg-gray-700 hover:bg-gray-800 text-white font-medium py-2.5 rounded-xl transition duration-300"
+          onClick={() => navigate('/admin-login')}
+          className="w-full bg-gray-700 hover:bg-gray-800 text-white font-medium py-2.5 mb-3 rounded-xl transition duration-300"
         >
-          Log In
+          Admin Login
+        </button>
+
+        <button
+          onClick={() => navigate('/user-login')}
+          className="w-full bg-gray-600 hover:bg-gray-700 text-white font-medium py-2.5 rounded-xl transition duration-300"
+        >
+          User Login
         </button>
       </div>
     </motion.aside>
