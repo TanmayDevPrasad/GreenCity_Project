@@ -8,6 +8,8 @@ import organizationRoute from './routes/organization.js';
 import issueSolvedRoute from './routes/issuesolved.js';
 import rankingRoute from './routes/userrank.js';
 import organizationRankRoute from './routes/organizationrank.js';
+import TransportEntryRouter from './routes/TransportEntry.js';
+import TransportQuery from './routes/TransportQuery.js';
 
 dotenv.config();
 
@@ -32,6 +34,8 @@ app.use('/organization', organizationRoute);
 app.use('/issuesolved', issueSolvedRoute);
 app.use('/userrank', rankingRoute);
 app.use('/organizationrank', organizationRankRoute);
+app.use('/entry',TransportEntryRouter);
+app.use('/query',TransportQuery);
 
 
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
