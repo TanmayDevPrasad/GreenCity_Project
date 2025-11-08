@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
+import { API_ENDPOINTS } from '../config/api';
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { loginOrganization } = useAuth();
   
   const [formData, setFormData] = useState({
     organizationId: '',
@@ -46,13 +50,20 @@ function LoginPage() {
     setError('');
   
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-  
-      // Always navigate to admin dashboard on success
-      navigate('/admin-dashboard');
+      const response = await axios.post(API_ENDPOINTS.ORG_LOGIN, {
+        organizationId: formData.organizationId,
+        password: formData.password
+      });
+
+      if (response.data && response.data.organization) {
+        loginOrganization(response.data.organization);
+        navigate('/admin-dashboard');
+      } else {
+        setError('Invalid response from server');
+      }
     } catch (err) {
-      setError('Invalid credentials. Please try again.');
+      const errorMessage = err.response?.data?.message || err.response?.data?.error || 'Invalid credentials. Please try again.';
+      setError(errorMessage);
       console.error('Login error:', err);
     } finally {
       setLoading(false);

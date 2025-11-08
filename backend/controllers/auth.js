@@ -33,17 +33,23 @@ export const login = async (req, res) => {
     try{
         const{email, password} = req.body;
         const user = await User.findOne({ email });
+        if(!user){
+            return res.status(400).json({ error: "Invalid credentials" });  
+        }
         const validPass = await bcrypt.compare(password, user.password);
-        if(!user || !validPass){
+        if(!validPass){
             return res.status(400).json({ error: "Invalid credentials" });  
         }
         res.status(200).json({ message: "Login successful", user: {
             _id : user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
             username: user.username,
             email: user.email
         }});
     }
     catch(error){
+        console.error('Login error:', error);
         res.status(500).json({ error: "Internal server error" });
     }
 };

@@ -1,155 +1,353 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Navbar from "../Navbar"; // Assuming it's in src/components or src
-
-const ORS_API_KEY = "YOUR_OPENROUTESERVICE_API_KEY"; // Replace with your API key
+import { API_ENDPOINTS } from "../config/api";
+import Navbar from "../Navbar";
+import Footer from "../Footer";
 
 function EcoTransport() {
   const [start, setStart] = useState("");
   const [destination, setDestination] = useState("");
-  const [vehicle, setVehicle] = useState("");
-  const [routeInfo, setRouteInfo] = useState(null);
+  const [transportType, setTransportType] = useState("");
+  const [transportOptions, setTransportOptions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [allTransports, setAllTransports] = useState([]);
 
-  const findRoute = async () => {
-    if (!start || !destination || !vehicle) {
-      alert("Please enter all fields.");
+  useEffect(() => {
+    fetchAllTransports();
+  }, []);
+
+  const fetchAllTransports = async () => {
+    try {
+      const response = await axios.get(API_ENDPOINTS.GET_ALL_TRANSPORTS);
+      if (response.data) {
+        setAllTransports(response.data);
+      }
+    } catch (err) {
+      console.error("Error fetching transports:", err);
+    }
+  };
+
+  const findTransport = async () => {
+    if (!start.trim() || !destination.trim()) {
+      setError("Please enter both starting point and destination.");
       return;
     }
 
     setLoading(true);
+    setError("");
+    setTransportOptions([]);
+
     try {
-      const startCoords = await getCoordinates(start);
-      const destCoords = await getCoordinates(destination);
+      const response = await axios.post(API_ENDPOINTS.TRANSPORT_QUERY, {
+        from: start.trim(),
+        to: destination.trim(),
+        transportType: transportType || undefined
+      });
 
-      if (!startCoords || !destCoords) {
-        alert("Invalid locations, please try again.");
-        setLoading(false);
-        return;
+      if (response.data && response.data.data) {
+        let results = response.data.data;
+        setTransportOptions(results);
+        
+        if (results.length === 0) {
+          setError(response.data.message || "No transport options found for this route. Try different locations or check all available routes below.");
+        } else {
+          // Clear error on success
+          setError("");
+        }
+      } else {
+        setError("No transport options found for this route. Check all available routes below.");
       }
-
-      const modeMap = {
-        Bus: "driving-car",
-        Bicycle: "cycling-regular",
-        EV: "driving-electric",
-      };
-
-      const mode = modeMap[vehicle];
-
-      const routeResponse = await axios.get(
-        `https://api.openrouteservice.org/v2/directions/${mode}?api_key=${ORS_API_KEY}&start=${startCoords}&end=${destCoords}`
-      );
-
-      const routeData = routeResponse.data;
-      const distance = (routeData.routes[0].summary.distance / 1000).toFixed(2);
-      const duration = (routeData.routes[0].summary.duration / 60).toFixed(0);
-
-      setRouteInfo({ distance, duration });
-
-    } catch (error) {
-      console.error("Error fetching route:", error);
-      alert("Could not find a route. Try again.");
+    } catch (err) {
+      if (err.response?.status === 404) {
+        setError("No exact matches found. Check all available routes below or try different search terms.");
+      } else {
+        const errorMessage = err.response?.data?.message || "Failed to find transport options. Please try again.";
+        setError(errorMessage);
+      }
+      console.error("Error fetching transport:", err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  const getCoordinates = async (location) => {
-    try {
-      const response = await axios.get(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${location}`
-      );
-      if (response.data.length > 0) {
-        return `${response.data[0].lon},${response.data[0].lat}`;
-      }
-      return null;
-    } catch (error) {
-      console.error("Error fetching coordinates:", error);
-      return null;
+  const handleClearSearch = () => {
+    setStart("");
+    setDestination("");
+    setTransportType("");
+    setTransportOptions([]);
+    setError("");
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      findTransport();
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Navbar */}
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-green-50 to-blue-50">
       <Navbar />
 
-      {/* Page Content */}
-      <div className="pt-24 flex items-center justify-center px-4">
-        <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-          <h1 className="text-2xl font-bold text-green-700 text-center">
-            Eco Transport Query
-          </h1>
-          <p className="text-gray-600 text-center mt-2">
-            Find sustainable transport options in your area.
-          </p>
-
-          <div className="space-y-4 mt-4">
-            <div>
-              <label className="block text-gray-700 font-medium">
-                Starting Point
-              </label>
-              <input
-                type="text"
-                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500"
-                placeholder="Enter starting location"
-                value={start}
-                onChange={(e) => setStart(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="block text-gray-700 font-medium">
-                Destination
-              </label>
-              <input
-                type="text"
-                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500"
-                placeholder="Enter destination"
-                value={destination}
-                onChange={(e) => setDestination(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="block text-gray-700 font-medium">
-                Select Vehicle Type
-              </label>
-              <select
-                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500"
-                value={vehicle}
-                onChange={(e) => setVehicle(e.target.value)}
-              >
-                <option value="">Choose a vehicle</option>
-                <option value="Bus">Bus</option>
-                <option value="Bicycle">Bicycle</option>
-                <option value="EV">Electric Vehicle</option>
-              </select>
-            </div>
-
-            <button
-              onClick={findRoute}
-              className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition duration-200"
-              disabled={loading}
-            >
-              {loading ? "Finding Route..." : "Find Route"}
-            </button>
+      <div className="flex-1 container mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-green-700 mb-4">🌱 Eco Transport Finder</h1>
+            <p className="text-gray-600 text-lg">Discover sustainable transportation options for your journey</p>
           </div>
 
-          {routeInfo && (
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg shadow-inner">
-              <h2 className="text-lg font-semibold text-green-700">
-                Route Information
-              </h2>
-              <p className="text-gray-700 mt-2">
-                Distance: {routeInfo.distance} km
-              </p>
-              <p className="text-gray-700">
-                Estimated Time: {routeInfo.duration} minutes
-              </p>
+          {/* Search Section */}
+          <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 className="text-2xl font-bold text-green-800 mb-6">Find Your Route</h2>
+            
+            {error && (
+              <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-r-lg">
+                <p className="text-sm">{error}</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div>
+                <label className="block text-gray-700 font-medium mb-2">From*</label>
+                <input
+                  type="text"
+                  className="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                  placeholder="e.g., Downtown Station"
+                  value={start}
+                  onChange={(e) => setStart(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-2">To*</label>
+                <input
+                  type="text"
+                  className="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                  placeholder="e.g., Airport Terminal"
+                  value={destination}
+                  onChange={(e) => setDestination(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-2">Transport Type</label>
+                <select
+                  className="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                  value={transportType}
+                  onChange={(e) => setTransportType(e.target.value)}
+                >
+                  <option value="">All Types</option>
+                  <option value="Bus">🚌 Bus</option>
+                  <option value="Train">🚂 Train</option>
+                  <option value="Metro">🚇 Metro</option>
+                  <option value="SharedCab">🚗 Shared Cab</option>
+                  <option value="Other">🚕 Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-3 justify-center">
+              <button
+                onClick={findTransport}
+                disabled={loading || !start.trim() || !destination.trim()}
+                className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-500 text-white font-semibold rounded-lg hover:from-green-700 hover:to-green-600 transition-all transform hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
+              >
+                {loading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Searching...
+                  </>
+                ) : (
+                  <>
+                    🔍 Search Transport Options
+                  </>
+                )}
+              </button>
+              
+              {(start || destination || transportType || transportOptions.length > 0) && (
+                <button
+                  onClick={handleClearSearch}
+                  className="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-all flex items-center justify-center"
+                >
+                  🗑️ Clear
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Results Section */}
+          {transportOptions.length > 0 && (
+            <div className="bg-white rounded-2xl shadow-xl p-8">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-green-800 mb-2">
+                    🎉 Found {transportOptions.length} Transport Option{transportOptions.length > 1 ? 's' : ''}
+                  </h2>
+                  <p className="text-gray-600">
+                    Routes from <span className="font-semibold">{start}</span> to <span className="font-semibold">{destination}</span>
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {transportOptions.map((transport) => (
+                  <div key={transport._id} className="border-2 border-green-100 rounded-xl p-6 hover:shadow-xl hover:border-green-400 transition-all bg-gradient-to-br from-white to-green-50">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="px-3 py-1 bg-gradient-to-r from-green-100 to-green-200 text-green-700 rounded-full text-sm font-semibold">
+                        {transport.transportType}
+                      </span>
+                      <span className="text-2xl font-bold text-green-600">₹{transport.fare}</span>
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-800 mb-3">{transport.agencyName}</h3>
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center text-gray-700 bg-white p-2 rounded-lg">
+                        <span className="text-lg mr-2">📍</span>
+                        <div>
+                          <span className="text-xs text-gray-500">From</span>
+                          <p className="font-semibold">{transport.from}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center text-gray-700 bg-white p-2 rounded-lg">
+                        <span className="text-lg mr-2">🎯</span>
+                        <div>
+                          <span className="text-xs text-gray-500">To</span>
+                          <p className="font-semibold">{transport.to}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between text-gray-600 bg-white p-2 rounded-lg">
+                        <div className="flex items-center">
+                          <span className="text-lg mr-2">⏰</span>
+                          <span className="text-sm font-semibold">Frequency:</span>
+                        </div>
+                        <span className="font-bold">{transport.frequency}</span>
+                      </div>
+                    </div>
+                    <div className="mb-4 bg-white p-3 rounded-lg">
+                      <p className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                        <span className="mr-2">🚌</span> Departure Times:
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {Array.isArray(transport.departureTimes) ? (
+                          transport.departureTimes.map((time, idx) => (
+                            <span key={idx} className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-medium">
+                              {time}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs text-gray-500">Not specified</span>
+                        )}
+                      </div>
+                    </div>
+                    {transport.contactInfo && transport.contactInfo !== 'Not provided' && (
+                      <div className="pt-4 border-t border-gray-200 bg-white p-3 rounded-lg">
+                        <p className="text-sm text-gray-600 flex items-center">
+                          <span className="font-semibold mr-2">📞 Contact:</span>
+                          <span className="text-green-600 font-medium">{transport.contactInfo}</span>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* All Available Transports */}
+          {allTransports.length > 0 && transportOptions.length === 0 && !loading && (
+            <div className="bg-white rounded-2xl shadow-xl p-8 mt-8">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-green-800 mb-2">All Available Transport Routes</h2>
+                  <p className="text-gray-600">Browse all {allTransports.length} available routes</p>
+                </div>
+                {allTransports.length > 12 && (
+                  <span className="text-sm text-gray-500">Showing first 12 routes</span>
+                )}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {allTransports.slice(0, 12).map((transport) => (
+                  <div 
+                    key={transport._id} 
+                    className="border-2 border-gray-200 rounded-xl p-6 hover:shadow-lg hover:border-green-300 transition-all cursor-pointer"
+                    onClick={() => {
+                      setStart(transport.from);
+                      setDestination(transport.to);
+                      setTransportType(transport.transportType);
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
+                        {transport.transportType}
+                      </span>
+                      <span className="text-xl font-bold text-green-600">₹{transport.fare}</span>
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-800 mb-2">{transport.agencyName}</h3>
+                    <p className="text-sm text-gray-600 mb-2">
+                      <span className="font-semibold">{transport.from}</span> → <span className="font-semibold">{transport.to}</span>
+                    </p>
+                    <div className="flex items-center justify-between mt-3">
+                      <p className="text-xs text-gray-500">Frequency: {transport.frequency}</p>
+                      <span className="text-xs text-green-600 font-semibold">Click to search</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {allTransports.length > 12 && (
+                <div className="mt-6 text-center">
+                  <p className="text-gray-600">And {allTransports.length - 12} more routes available. Use search to find specific routes.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Show all transports when no search is performed */}
+          {allTransports.length > 0 && transportOptions.length === 0 && !loading && !start && !destination && (
+            <div className="bg-white rounded-2xl shadow-xl p-8 mt-8">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-green-800 mb-2">Popular Routes</h2>
+                  <p className="text-gray-600">Click on any route to search for it</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {allTransports.slice(0, 9).map((transport) => (
+                  <div 
+                    key={transport._id} 
+                    className="border-2 border-gray-200 rounded-xl p-6 hover:shadow-lg hover:border-green-300 transition-all cursor-pointer transform hover:scale-105"
+                    onClick={() => {
+                      setStart(transport.from);
+                      setDestination(transport.to);
+                      setTransportType("");
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="px-3 py-1 bg-gradient-to-r from-blue-100 to-green-100 text-blue-700 rounded-full text-sm font-semibold">
+                        {transport.transportType}
+                      </span>
+                      <span className="text-xl font-bold text-green-600">₹{transport.fare}</span>
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-800 mb-2">{transport.agencyName}</h3>
+                    <p className="text-sm text-gray-600 mb-2">
+                      <span className="font-semibold">{transport.from}</span> → <span className="font-semibold">{transport.to}</span>
+                    </p>
+                    <div className="flex items-center justify-between mt-3">
+                      <p className="text-xs text-gray-500">Frequency: {transport.frequency}</p>
+                      <span className="text-xs text-green-600 font-semibold animate-pulse">👆 Click to search</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }

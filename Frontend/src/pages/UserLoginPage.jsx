@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
+import { API_ENDPOINTS } from '../config/api';
 
 function UserLoginPage() {
   const navigate = useNavigate();
+  const { loginUser } = useAuth();
 
   const [formData, setFormData] = useState({
-    userId: '',
+    email: '',
     password: ''
   });
 
@@ -31,27 +35,28 @@ function UserLoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.userId || !formData.password) {
-      setError('Please enter both User ID and Password');
+    if (!formData.email || !formData.password) {
+      setError('Please enter both Email and Password');
       return;
     }
     setLoading(true);
     setError('');
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await axios.post(API_ENDPOINTS.USER_LOGIN, {
+        email: formData.email,
+        password: formData.password
+      });
 
-      const simulatedUser = {
-        role: formData.userId.toLowerCase().includes('admin') ? 'admin' : 'user'
-      };
-
-      if (simulatedUser.role === 'admin') {
-        navigate('/admin-dashboard');
-      } else {
+      if (response.data && response.data.user) {
+        loginUser(response.data.user);
         navigate('/user-dashboard');
+      } else {
+        setError('Invalid response from server');
       }
     } catch (err) {
-      setError('Invalid credentials. Please try again.');
+      const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Invalid credentials. Please try again.';
+      setError(errorMessage);
       console.error('Login error:', err);
     } finally {
       setLoading(false);
@@ -118,16 +123,16 @@ function UserLoginPage() {
 
               <div className="space-y-6">
                 <div>
-                  <label htmlFor="userId" className="block text-gray-700 font-medium mb-2">
-                    User ID
+                  <label htmlFor="email" className="block text-gray-700 font-medium mb-2">
+                    Email
                   </label>
                   <input
-                    id="userId"
-                    type="text"
-                    value={formData.userId}
+                    id="email"
+                    type="email"
+                    value={formData.email}
                     onChange={handleChange}
                     className="w-full pl-3 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                    placeholder="Enter your User ID"
+                    placeholder="Enter your Email"
                   />
                 </div>
 

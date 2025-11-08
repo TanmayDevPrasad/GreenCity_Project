@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
+import axios from 'axios';
+import { API_ENDPOINTS } from '../config/api';
+import Navbar from '../Navbar';
+import Footer from '../Footer';
 
 function TransportEntry() {
-  const { register, handleSubmit, control, formState: { errors } } = useForm({
+  const { register, handleSubmit, control, formState: { errors }, reset } = useForm({
     defaultValues: {
       departureTimes: [{ time: '' }],
     }
@@ -13,18 +17,92 @@ function TransportEntry() {
     name: 'departureTimes'
   });
 
-  const onSubmit = (data) => {
-    console.log("Transport Entry Submitted:", data);
-    alert("Transport details submitted successfully!");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const onSubmit = async (data) => {
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // Extract times from the array
+      const departureTimes = data.departureTimes.map(item => item.time).filter(time => time);
+
+      if (departureTimes.length === 0) {
+        setError('Please add at least one departure time');
+        setLoading(false);
+        return;
+      }
+
+      if (!data.endingDestination) {
+        setError('Ending destination is required');
+        setLoading(false);
+        return;
+      }
+
+      const payload = {
+        agencyName: data.agencyName,
+        transportType: data.transportType,
+        from: data.startingDestination,
+        to: data.endingDestination,
+        departureTimes: departureTimes,
+        frequency: data.frequency ? String(data.frequency) : 'Not specified',
+        fare: parseFloat(data.fare) || 0,
+        contactInfo: data.contactInfo || 'Not provided'
+      };
+
+      const response = await axios.post(API_ENDPOINTS.TRANSPORT_ENTRY, payload);
+
+      if (response.data && response.data.message) {
+        setSuccess('Transport entry submitted successfully!');
+        // Reset form
+        reset({
+          agencyName: '',
+          transportType: '',
+          startingDestination: '',
+          endingDestination: '',
+          departureTimes: [{ time: '' }],
+          frequency: '',
+          fare: '',
+          contactInfo: ''
+        });
+        // Clear success message after 3 seconds
+        setTimeout(() => {
+          setSuccess('');
+        }, 3000);
+      }
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || err.response?.data?.error || 'Failed to submit transport entry. Please try again.';
+      setError(errorMessage);
+      console.error('Error submitting transport entry:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">
-      <div className="bg-white p-8 rounded-xl shadow-lg max-w-xl w-full">
-        <h2 className="text-2xl font-bold text-green-700 text-center mb-4">Transport Entry</h2>
-        <p className="text-gray-600 text-center mb-6">Provide transport details to add a new entry.</p>
+    <div className="min-h-screen flex flex-col bg-gray-100">
+      <Navbar />
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="bg-white p-8 rounded-xl shadow-lg max-w-xl w-full">
+          <h2 className="text-2xl font-bold text-green-700 text-center mb-4">Transport Entry</h2>
+          <p className="text-gray-600 text-center mb-6">Provide transport details to add a new entry.</p>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-r-lg">
+              <p className="text-sm">{error}</p>
+            </div>
+          )}
+
+          {success && (
+            <div className="mb-4 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 rounded-r-lg">
+              <p className="text-sm">{success}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Other input fields (unchanged) */}
           <div>
             <label className="block text-gray-700 font-medium">Agency Name*</label>
@@ -61,6 +139,17 @@ function TransportEntry() {
               placeholder="Enter starting point"
             />
             {errors.startingDestination && <p className="text-red-500 text-sm">{errors.startingDestination.message}</p>}
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-medium">Ending Destination*</label>
+            <input
+              type="text"
+              {...register('endingDestination', { required: 'Ending destination is required' })}
+              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500"
+              placeholder="Enter ending point"
+            />
+            {errors.endingDestination && <p className="text-red-500 text-sm">{errors.endingDestination.message}</p>}
           </div>
 
           {/* 👇 Multiple Departure Times (Array) 👇 */}
@@ -123,12 +212,25 @@ function TransportEntry() {
 
           <button
             type="submit"
-            className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition duration-200"
+            disabled={loading}
+            className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition duration-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
           >
-            Submit Transport Entry
+            {loading ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Submitting...
+              </>
+            ) : (
+              'Submit Transport Entry'
+            )}
           </button>
         </form>
+        </div>
       </div>
+      <Footer />
     </div>
   );
 }

@@ -15,7 +15,7 @@ export const getOrganizationRanks = async (req, res) => {
       phone: org.phone
     }));
 
-    res.status(200).json({ organizations: rankedOrganizations });
+    res.status(200).json(rankedOrganizations);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Failed to fetch organization rankings', error: error.message });

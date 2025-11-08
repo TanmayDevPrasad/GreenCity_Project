@@ -1,4 +1,4 @@
-import Issue from '../models/Issue.js';
+import Issue from '../models/issue.js';
 import User from '../models/auth.js';
 import Organization from '../models/organization.js';
 import IssueSolved from '../models/issuesolved.js';

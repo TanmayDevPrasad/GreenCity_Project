@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { API_ENDPOINTS } from '../config/api';
 
 function AdminSignupPage() {
   const {
@@ -11,24 +13,32 @@ function AdminSignupPage() {
   } = useForm();
   const navigate = useNavigate();
   const password = watch("password");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const onSubmit = async (data) => {
+    setLoading(true);
+    setError('');
     try {
-      // Simulate logo upload
-      if (data.logo && data.logo[0]) {
-        console.log('Uploaded logo file:', data.logo[0]);
+      const response = await axios.post(API_ENDPOINTS.ORG_SIGNUP, {
+        organizationName: data.organizationName,
+        address: data.address,
+        organizationId: data.organizationId,
+        email: data.email,
+        phone: parseInt(data.phone),
+        password: data.password
+      });
+
+      if (response.data && response.data.message) {
+        alert('Admin account created successfully!');
+        navigate('/admin-login');
       }
-  
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-  
-      alert('Admin account created successfully!');
-      
-      // Redirect to Admin Login Page after success
-      navigate('/admin-login');
     } catch (error) {
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Registration failed. Please try again.';
+      setError(errorMessage);
       console.error('Registration failed:', error);
-      alert('Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -41,6 +51,11 @@ function AdminSignupPage() {
           <p className="text-green-100 text-center text-sm mt-1">Create your administrative account</p>
         </div>
         <div className="p-6 bg-gradient-to-b from-green-50 to-white">
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-r-lg">
+              <p className="text-sm">{error}</p>
+            </div>
+          )}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-4">
               <h3 className="text-green-800 font-medium border-b border-green-100 pb-1 mb-2">Organization Details</h3>
@@ -156,9 +171,20 @@ function AdminSignupPage() {
               </button>
               <button
                 type="submit"
-                className="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                disabled={loading}
+                className="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
               >
-                Register Account
+                {loading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Creating Account...
+                  </>
+                ) : (
+                  'Register Account'
+                )}
               </button>
             </div>
           </form>
